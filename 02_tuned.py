@@ -78,7 +78,8 @@ random_search.fit(X=X_train, y=y_train.ravel())
 
 #%%
 #get best model
-best_rf = random_search.estimator 
+best_rf = random_search.best_estimator_ 
+
 #show best parameters
 best_params_rf = random_search.best_params_
 best_params_rf
@@ -99,6 +100,4 @@ print("Confusion matrix: \n", confusion_matrix(y_test, preds_rf))
 #%%
 #get the roc curve to check if we are better than a random classifier
 get_roc_curve(X_train, y_train,X_test, y_test, best_rf)
-
-
 # %%

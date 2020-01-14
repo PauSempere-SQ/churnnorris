@@ -245,7 +245,7 @@ ax = sns.barplot(x="Scores", y="Version", data = f1_scores_df).set_title("Balanc
 #feature importance for random forest model
 importance = pd.DataFrame({
     "feature": X_train.columns,
-    "importance":rf_smote.feature_importances_
+    "importance":rf_balanced.feature_importances_
 }).sort_values("importance")
 importance.plot.barh(x="feature", y="importance")
 
@@ -257,29 +257,32 @@ ax = sns.barplot(x="feature", y="importance", data = importance, color = "b",
                 )
 plt.xticks(rotation = 90)
 
-#ONLY WORKS WITH GRADIENT BOOSTING MODELS
 #%%
+#let's explore shap with light gbm
+from lightgbm import LGBMClassifier
+import lightgbm as lgb
 
-from sklearn.ensemble import GradientBoostingClassifier
+clf = LGBMClassifier(n_estimators=1000)
+clf.fit(X_train, y_train.ravel())
 
-grad = GradientBoostingClassifier(n_estimators = 100)
-grad = grad.fit(X_train, y_train.ravel())
-
-#will be deprecated
-from sklearn.ensemble.partial_dependence import partial_dependence, plot_partial_dependence
-
-feat_names = X_train.columns
-feats_to_plot = list(range(1, X_train.shape[1]-1))
+lgb.plot_importance(clf, importance_type='gain', max_num_features=20, figsize=(15, 15))
 
 #%%
-plot_partial_dependence(grad, X_train, feats_to_plot, 
-                        feature_names=feat_names, 
-                        n_jobs=-1, grid_resolution=150)
+import shap 
 
-fig = plt.gcf()
-fig.set_size_inches(15, 15)
+shap.initjs()
 
-#%%
-X_train.columns
+explainer = shap.TreeExplainer(clf)
+shap_values = explainer.shap_values(X = X_train)
 
 #%%
+shap.summary_plot(
+                    shap_values=shap_values, features = X_train, max_display = 20, 
+                    feature_names=X_train.columns, plot_type='bar'
+                 )
+
+#%%
+sns.set_style("whitegrid")
+shap.summary_plot(
+                  shap_values=shap_values, features = X_train, max_display = 20, 
+                  feature_names=X_train.columns)

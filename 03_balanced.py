@@ -45,7 +45,6 @@ X_encoded = pd.DataFrame(str_encoder.fit_transform(X=df_base.drop(columns = [lab
                             columns = df_columns)
 
 X_encoded.head(10)
-
 #%%
 #split data in 70-30 ratios
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X_encoded, y_encoded, test_size = 0.3)
@@ -53,6 +52,7 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X_encoded, y
 print(X_train.shape, X_test.shape)
 
 #%%
+#load our imbalanced label library
 from imblearn.over_sampling import ADASYN, SMOTE, SVMSMOTE
 
 #OVERSAMPLING
@@ -72,8 +72,7 @@ rf = ensemble.RandomForestClassifier(n_estimators = 100, max_depth=8, criterion=
 rf.fit(X = X_train, y = y_train.ravel())
 
 #FROM NOW ON, USE THE TUNED VERSION ALTHOUGH WE SHOULD RE-TUNE
-
-#weight classes 
+#weight classes using the model itself
 rf_balanced = ensemble.RandomForestClassifier(n_jobs=-1,
                                               class_weight = "balanced_subsample", ##VERY IMPORTANT
                                               **best_params_rf)
@@ -114,7 +113,6 @@ preds_rf_balanced_smote = rf_balanced_smote.predict(X=X_test)
 
 #%%
 #PRINT RESULTS
-
 print("Accuracy BASELINE:", round(metrics.accuracy_score(y_true = preds_rf, y_pred = y_test.ravel()), 2))
 print("Precision BASELINE:", round(metrics.precision_score(y_true = preds_rf, y_pred = y_test.ravel()), 2))
 print("Recall BASELINE:", round(metrics.recall_score(y_true = preds_rf, y_pred = y_test.ravel()), 2))

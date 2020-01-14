@@ -77,8 +77,6 @@ plt.show()
 X_train_RFE = pd.DataFrame(rfe.transform(X_train), columns = X_train.columns[rfe.support_])
 X_test_RFE = pd.DataFrame(rfe.transform(X_test), columns = X_test.columns[rfe.support_])
 
-#X_train_RFE = X_train[rfe.support_]
-
 print(X_train.shape, X_train_RFE.shape)
 
 #%%
@@ -130,6 +128,7 @@ rf_adasyn = ensemble.RandomForestClassifier(n_jobs=-1,
                             **best_params_rf)
 rf_adasyn.fit(X = X_adasyn, y = y_adasyn.ravel())
 
+#%%
 #RFE
 rf_reduced = ensemble.RandomForestClassifier(n_jobs=-1, n_estimators = 100, class_weight="balanced_subsample",
                                                 max_depth = 8, criterion="entropy") #, **best_params_rf)
@@ -145,6 +144,8 @@ preds_rf_adasyn = rf_adasyn.predict(X=X_test)
 preds_rf = rf.predict(X=X_test)
 preds_rf_balanced = rf_balanced.predict(X=X_test)
 preds_rf_balanced_smote = rf_balanced_smote.predict(X=X_test)
+
+#%%
 preds_rf_reduced = rf_reduced.predict(X=X_test_RFE)
 
 #%%
@@ -159,11 +160,13 @@ print("Precision BALANCED:", round(metrics.precision_score(y_true = preds_rf_bal
 print("Recall BALANCED:", round(metrics.recall_score(y_true = preds_rf_balanced, y_pred = y_test.ravel()), 2))
 print("F1 BALANCED:", round(metrics.f1_score(y_true = preds_rf_balanced, y_pred = y_test.ravel()), 2))
 
+#%%
 print("Accuracy REDUCED: ", round(metrics.accuracy_score(y_true = preds_rf_reduced, y_pred = y_test.ravel()), 2))
 print("Precision REDUCED: ", round(metrics.precision_score(y_true = preds_rf_reduced, y_pred = y_test.ravel()), 2))
 print("Recall REDUCED: ", round(metrics.recall_score(y_true = preds_rf_reduced, y_pred = y_test.ravel()), 2))
 print("F1 REDUCED: ", round(metrics.f1_score(y_true = preds_rf_reduced, y_pred = y_test.ravel()), 2))
 
+#%%
 print("Accuracy SMOTE: ", round(metrics.accuracy_score(y_true = preds_rf_smote, y_pred = y_test.ravel()), 2))
 print("Precision SMOTE: ", round(metrics.precision_score(y_true = preds_rf_smote, y_pred = y_test.ravel()), 2))
 print("Recall SMOTE: ", round(metrics.recall_score(y_true = preds_rf_smote, y_pred = y_test.ravel()), 2))

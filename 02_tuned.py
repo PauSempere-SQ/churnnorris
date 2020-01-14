@@ -1,24 +1,36 @@
 #%%
 import pandas as pd 
-import lightgbm as lgbm
 import numpy as np
+import lightgbm as lgbm
 import sklearn as sk
 import xgboost as xgb
 from sklearn import model_selection
 from sklearn import ensemble
 from sklearn import preprocessing as sk_prep
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+import matplotlib.pyplot as plt
 
-base_path = "C:\\Users\\Pau\\Desktop\\SolidQ\\Summit 2019\\Churn Norris\\"
+#%%
+#load data from our local data folder
+base_path = "./data/"
 file = "churn_demo.csv"
 
-df_base = pd.read_csv(base_path+file).drop(columns=['RowNumber', 'CustomerId'], axis = 1)
+#drop features that will not be useful, they are either identifiers of the customer or 
+#personal information without any relation with their churn likelihood
+df_base = pd.read_csv(base_path+file).drop(columns=['RowNumber', 'Surname', 'CustomerId'], axis = 1)
 
 df_base.head(10)
 
 #%%
-#baseline random forest version 
+#how much data do we have?
+print(df_base.shape)
+
+#%%
+#create metadata 
 label = 'Exited'
-df_columns = df_base.columns[0 : df_base.shape[1]-1]
+df_columns = list(df_base.columns)
+df_columns.remove(label)
+print(df_columns)
 
 #%%
 #encoders 
@@ -35,14 +47,13 @@ X_encoded = pd.DataFrame(str_encoder.fit_transform(X=df_base.drop(columns = [lab
 X_encoded.head(10)
 
 #%%
-#split data in 70-30
+#split data in 70-30 ratios
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X_encoded, y_encoded, test_size = 0.3)
 
 print(X_train.shape, X_test.shape)
 
 #%%
 #tune our random forest
-
 param_grid = {
     "max_depth": list(range(20, 300, 10)),
     "criterion":  ["gini", "entropy"],
@@ -65,25 +76,29 @@ random_search = model_selection.RandomizedSearchCV(estimator = rf,
 #search in the random space
 random_search.fit(X=X_train, y=y_train.ravel())
 
-
 #%%
 #get best model
-best_rf = random_search.best_estimator_ 
+best_rf = random_search.estimator 
 #show best parameters
 best_params_rf = random_search.best_params_
 best_params_rf
 
 #%%
+#predict using our test set and print different error measures
 from sklearn import metrics
 
-preds_proba_best_rf = best_rf.predict_proba(X=X_test)
-preds_best_rf = best_rf.predict(X=X_test)
+preds_proba_rf = best_rf.predict_proba(X=X_test)
+preds_rf = best_rf.predict(X=X_test)
+
+print("Accuracy: ", round(metrics.accuracy_score(y_true = preds_rf, y_pred = y_test.ravel()), 2))
+print("Precision: ", round(metrics.precision_score(y_true = preds_rf, y_pred = y_test.ravel()), 2))
+print("Recall: ", round(metrics.recall_score(y_true = preds_rf, y_pred = y_test.ravel()), 2))
+print("F1: ", round(metrics.f1_score(y_true = preds_rf, y_pred = y_test.ravel()), 2))
+print("Confusion matrix: \n", confusion_matrix(y_test, preds_rf))
 
 #%%
-print("Accuracy: ", round(metrics.accuracy_score(y_true = preds_best_rf, y_pred = y_test.ravel()), 2))
-print("Precision: ", round(metrics.precision_score(y_true = preds_best_rf, y_pred = y_test.ravel()), 2))
-print("Recall: ", round(metrics.recall_score(y_true = preds_best_rf, y_pred = y_test.ravel()), 2))
-print("F1: ", round(metrics.f1_score(y_true = preds_best_rf, y_pred = y_test.ravel()), 2))
+#get the roc curve to check if we are better than a random classifier
+get_roc_curve(X_train, y_train,X_test, y_test, best_rf)
 
 
-#%%
+# %%

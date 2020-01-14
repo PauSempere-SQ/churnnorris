@@ -1,25 +1,38 @@
 #%%
 import pandas as pd 
+import numpy as np
 import lightgbm as lgbm
 import sklearn as sk
 import xgboost as xgb
 from sklearn import model_selection
 from sklearn import ensemble
 from sklearn import preprocessing as sk_prep
-import numpy as np
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+import matplotlib.pyplot as plt
 
-base_path = "C:\\Users\\Pau\\Desktop\\SolidQ\\Summit 2019\\Churn Norris\\"
+#%%
+#load data from our local data folder
+base_path = "./data/"
 file = "churn_demo.csv"
 
-df_base = pd.read_csv(base_path+file).drop(columns=['RowNumber', 'CustomerId'], axis = 1)
+#drop features that will not be useful, they are either identifiers of the customer or 
+#personal information without any relation with their churn likelihood
+df_base = pd.read_csv(base_path+file).drop(columns=['RowNumber', 'Surname', 'CustomerId'], axis = 1)
 
 df_base.head(10)
+
 #%%
-#encode data and split in train and test 
+#how much data do we have?
+print(df_base.shape)
+
+#%%
+#create metadata 
 label = 'Exited'
+df_columns = list(df_base.columns)
+df_columns.remove(label)
+print(df_columns)
 
-df_columns = df_base.columns[0 : df_base.shape[1]-1]
-
+#%%
 #encoders 
 l_binarizer = sk_prep.LabelBinarizer()
 str_encoder = sk_prep.OrdinalEncoder()
@@ -34,11 +47,10 @@ X_encoded = pd.DataFrame(str_encoder.fit_transform(X=df_base.drop(columns = [lab
 X_encoded.head(10)
 
 #%%
-#split data in 70-30
-import numpy as np 
+#split data in 70-30 ratios
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X_encoded, y_encoded, test_size = 0.3)
 
-print(X_train.shape, X_test.shape, np.bincount(df_base[label]))
+print(X_train.shape, X_test.shape)
 
 #%% 
 #RFE CV to train with less feats
